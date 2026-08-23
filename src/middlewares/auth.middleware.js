@@ -6,22 +6,35 @@ const verifyToken = (req, res, next) => {
 
     if (!authHeader) {
       return res.status(401).json({
-        sucesss: false,
+        success: false,
         message: "Unauthorized!",
       });
     }
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verfify(token, process.env.ACCESS_SECRET);
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Token",
+      });
+    }
 
-    req.userId = decoded?.id;
+    const user = jwt.verify(token, process.env.ACCESS_SECRET);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    req.user = user;
 
     next();
   } catch (error) {
-    return res.status(401).json({
+    res.status(500).json({
       success: false,
-      message: "Invalid token",
+      message: "Internal Server Error!",
     });
   }
 };
