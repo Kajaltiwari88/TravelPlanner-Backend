@@ -10,11 +10,17 @@ const verifyToken = (req, res, next) => {
         message: "Unauthorized!",
       });
     }
+    if (!authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authorization format.",
+      });
+    }
 
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         message: "Invalid Token",
       });
@@ -32,6 +38,19 @@ const verifyToken = (req, res, next) => {
 
     next();
   } catch (error) {
+    if (error?.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired. Please login again.",
+      });
+    }
+
+    if (error?.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token. Please login again.",
+      });
+    }
     res.status(500).json({
       success: false,
       message: "Internal Server Error!",
